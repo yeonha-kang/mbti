@@ -26,7 +26,7 @@
         
         <div class="flex justify-between">
             <button id="prevBtn" onclick="prevQuestion()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" disabled>이전</button>
-            <button id="nextBtn" onclick="nextQuestion()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" disabled>다음</button>
+            <button id="nextBtn" onclick="nextQuestion()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">다음</button>
         </div>
         
         <div id="result-container" class="mt-8" style="display: none;">
@@ -45,7 +45,7 @@
     </div>
 
     <script>
-        // 질문과 관련된 척도 매핑 (총 50개의 질문) 
+        // 질문과 관련된 척도 매핑 (50개의 샘플 질문 사용) 
         const questions = [
             {question: "다른 사람들과 함께 있을 때 에너지를 얻나요?", positive: 'E', negative: 'I'},
             {question: "파티에서 다른 사람들과 적극적으로 대화하나요?", positive: 'E', negative: 'I'},
@@ -119,4 +119,87 @@
         };
         
         let currentQuestion = 0;
-        let scores
+        let scores = {E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0};
+
+        function showQuestion() {
+            const questionEl = document.getElementById('question');
+            questionEl.textContent = questions[currentQuestion].question;
+            updateProgress();
+        }
+
+        function selectAnswer(answer) {
+            const {positive, negative} = questions[currentQuestion];
+            scores[positive] += answer;
+            scores[negative] += 6 - answer;
+            nextQuestion();
+        }
+        
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progress = (currentQuestion + 1) / questions.length * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+                updateButtons();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++; 
+                showQuestion();
+                updateButtons();
+            } else {
+                showResult();
+            }
+        }
+        
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            prevBtn.disabled = currentQuestion === 0;
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? '결과 보기' : '다음';
+        }
+
+        function determineMBTI() {
+            let mbti = "";
+            mbti += scores.E >= scores.I ? "E" : "I";
+            mbti += scores.S >= scores.N ? "S" : "N";
+            mbti += scores.T >= scores.F ? "T" : "F";  
+            mbti += scores.J >= scores.P ? "J" : "P";
+            return mbti;
+        }
+        
+        function showResult() {
+            const mbti = determineMBTI();
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = `당신의 MBTI 유형은 ${mbti} 입니다.`;
+            
+            const mbtiDescription = document.getElementById('mbti-description');
+            mbtiDescription.textContent = mbtiInfo[mbti] || "알 수 없는 유형입니다.";
+            
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+        }
+        
+        function restartTest() {
+            currentQuestion = 0;
+            scores = {E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0};
+            document.getElementById('question-container').style.display = 'block';  
+            document.getElementById('prevBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('result-container').style.display = 'none';
+            showQuestion();
+            updateButtons();
+        }
+
+        showQuestion();
+    </script>
+</body>
+</html>
